@@ -1,10 +1,15 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ClientHandler implements Runnable {
+    private static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
     private final Socket socket;
+    private String userName;
+    private PrintWriter writer;
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
