@@ -67,6 +67,29 @@ public class ClientHandler implements Runnable {
                     continue;
                 }
 
+                if (msg.startsWith("/whisper ")) {
+                    String[] parts = msg.substring(9).split(" ", 2);
+                    if (parts.length < 2) {
+                        sendMessage("Неверный формат. Используй: /whisper имя сообщение");
+                        continue;
+                    }
+
+                    String targetName = parts[0];
+                    String privateMsg = parts[1];
+
+                    ClientHandler target = clients.stream()
+                            .filter(c -> c.userName.equalsIgnoreCase(targetName))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (target != null) {
+                        target.sendMessage("(Личное от " + this.userName + "): " + privateMsg);
+                        sendMessage("(Вы шепнули " + targetName + "): " + privateMsg);
+                    } else {
+                        sendMessage("Пользователь с именем " + targetName + " не найден.");
+                    }
+                    continue;
+                }
 
 
                 if (isQuitMsg(msg) || isEmptyMsg(msg)) {
