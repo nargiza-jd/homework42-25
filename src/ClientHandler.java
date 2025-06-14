@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -24,23 +23,31 @@ public class ClientHandler implements Runnable {
                 Scanner reader = getReader(socket);
                 PrintWriter writer = getWriter(socket)
         ) {
-            sendResponse("Привет " + socket, writer);
+            this.writer = writer;
+
+            writer.write("Введите ваше имя: ");
+            writer.flush();
+            this.userName = reader.nextLine().strip();
+
+            clients.add(this);
+            broadcast(String.format("Пользователь %s подключился к чату %s%n", userName, this), this);
 
             while (true) {
-                String message = reader.nextLine().strip();
-                System.out.printf("Получено сообщение: %s%n", message);
+                String msg = reader.nextLine().strip();
 
-                if (isQuitMsg(message) || isEmptyMsg(message)) {
+                if (isQuitMsg(msg) || isEmptyMsg(msg)) {
                     break;
                 }
 
-                sendResponse(message, writer);
+                broadcast(String.format("%s: %s%s", userName, msg, this), this);
             }
 
-        } catch (NoSuchElementException e) {
-            System.out.println("Клиент отключился неожиданно");
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.printf("Ошибка у клиента: %s", socket);
+        } finally {
+            clients.remove(this);
+            broadcast(String.format("Пользователь %s покинул чат. %s", userName, this), this);
+            System.out.printf("Клиент отключён: %s%n", socket);
         }
 
         System.out.printf("Клиент отключён: %s%n", socket);
@@ -65,9 +72,17 @@ public class ClientHandler implements Runnable {
         return new PrintWriter(outputStream);
     }
 
-    private void sendResponse(String response, Writer writer) throws IOException {
-        writer.write(response);
-        writer.write(System.lineSeparator());
+    private void broadcast(String message, ClientHandler sender) {
+        for (ClientHandler client : clients) {
+            if (client != sender) {
+                client.sendMessage(message);
+            }
+        }
+    }
+
+    private void sendMessage(String message) {
+        writer.write(message + "\n");
         writer.flush();
     }
+
 }
