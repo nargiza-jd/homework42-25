@@ -35,6 +35,30 @@ public class ClientHandler implements Runnable {
             while (true) {
                 String msg = reader.nextLine().strip();
 
+
+                if (msg.startsWith("/name ")) {
+                    String newName = msg.substring(6).trim();
+
+                    if (newName.isBlank() || newName.contains(" ")) {
+                        sendMessage("Имя не должно быть пустым или содержать пробелы");
+                        continue;
+                    }
+
+                    boolean nameTaken = clients.stream().anyMatch(c -> newName.equalsIgnoreCase(c.userName));
+                    if (nameTaken) {
+                        sendMessage("Имя уже занято другим пользователем");
+                        continue;
+                    }
+
+                    String oldName = this.userName;
+                    this.userName = newName;
+
+                    sendMessage("Вы теперь известны как " + newName);
+                    broadcast("Пользователь " + oldName + " теперь известен как " + newName, this);
+                    continue;
+                }
+
+
                 if (isQuitMsg(msg) || isEmptyMsg(msg)) {
                     break;
                 }
@@ -51,6 +75,8 @@ public class ClientHandler implements Runnable {
         }
 
         System.out.printf("Клиент отключён: %s%n", socket);
+
+
     }
 
     private boolean isEmptyMsg(String msg) {
