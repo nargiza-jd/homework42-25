@@ -3,6 +3,7 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class ClientHandler implements Runnable {
     private static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
@@ -57,6 +58,15 @@ public class ClientHandler implements Runnable {
                     broadcast("Пользователь " + oldName + " теперь известен как " + newName, this);
                     continue;
                 }
+
+                if (msg.equals("/list")) {
+                    String names = clients.stream()
+                            .map(c -> c.userName)
+                            .collect(Collectors.joining(", "));
+                    sendMessage("Пользователи онлайн: " + names);
+                    continue;
+                }
+
 
 
                 if (isQuitMsg(msg) || isEmptyMsg(msg)) {
